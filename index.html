@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sky Now">
+<meta name="theme-color" content="#0b0606">
+<title>Gällstaö Sky Now</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Red-on-black night mode: readable at the telescope without spoiling dark adaptation */
+:root {
+  --bg: #0b0606; --panel: #150c0b; --line: #2e1916;
+  --fg: #e8c9c3; --muted: #9b7770; --red: #e0503e; --red-dim: #5a211a;
+  --display: "Chakra Petch", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); }
+body {
+  font: 15px/1.5 var(--body);
+  padding-top: max(20px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.eyebrow, .seg-label { font: 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 600 28px/1.1 var(--display); margin: 2px 0 6px; text-wrap: balance; }
+.status { font: 13px var(--mono); color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; font-variant-numeric: tabular-nums; }
+.status b { color: var(--fg); font-weight: 500; }
+.controls { display: grid; gap: 10px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { appearance: none; border: 0; background: transparent; color: var(--muted); font: 500 14px var(--body); padding: 10px 6px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--red-dim); color: var(--fg); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.card h2 { font: 600 20px var(--display); margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.tag { font: 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--red); border: 1px solid var(--red-dim); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.frame { position: relative; aspect-ratio: 1; max-width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
+.frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.frame .msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font: 13px var(--mono); text-align: center; padding: 16px; }
+.stamp { position: absolute; left: 8px; bottom: 8px; background: rgba(11,6,6,.78); color: var(--fg); font: 500 13px var(--mono); padding: 4px 8px; border-radius: 6px; font-variant-numeric: tabular-nums; pointer-events: none; }
+.pin { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 2px solid var(--red); border-radius: 50%; pointer-events: none; }
+.legend, .note { font-size: 13px; color: var(--muted); margin: 0; }
+.legend span { color: var(--fg); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { appearance: none; display: inline-flex; justify-content: center; align-items: center; flex: 1 1 auto; text-decoration: none; background: var(--red); color: var(--bg); border: 0; font: 600 15px var(--body); padding: 11px 14px; border-radius: 10px; cursor: pointer; }
+.btn.alt { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+footer { font-size: 12px; color: var(--muted); line-height: 1.6; }
+footer a { color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">59.37° N · 17.77° E · Gällstaö, Ekerö</div>
+    <h1>Sky over Gällstaö, right now</h1>
+    <div class="status">
+      <span>Local <b id="tLocal">--:--</b></span>
+      <span>Sun <b id="tSun">--</b></span>
+      <span>Updated <b id="tUpd">--:--</b></span>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div>
+      <div class="seg-label">View</div>
+      <div class="seg" role="group" aria-label="View size">
+        <button data-zoom="0">Ekerö<br><small>~60 km</small></button>
+        <button data-zoom="1">Mälardalen<br><small>~250 km</small></button>
+        <button data-zoom="2">Baltic<br><small>~900 km</small></button>
+      </div>
+    </div>
+    <div>
+      <div class="seg-label">Satellite mode</div>
+      <div class="seg" role="group" aria-label="Day or night products">
+        <button data-mode="auto">Auto</button>
+        <button data-mode="night">Night</button>
+        <button data-mode="day">Day</button>
+      </div>
+    </div>
+    <div class="row"><button class="btn alt" id="refresh">Refresh now</button></div>
+  </div>
+
+  <div id="cards"></div>
+
+  <section class="card">
+    <h2>Rain radar <span class="tag">SMHI</span></h2>
+    <p class="note">Sharpest rain picture there is: about 2 km detail, a new frame every 5 minutes, with lightning.</p>
+    <div class="row"><a class="btn" href="https://www.smhi.se/vader/radar-och-satellit/radar-med-blixt/q/sverige/plats/Stockholm/2673730" target="_blank" rel="noopener">Open SMHI radar</a></div>
+  </section>
+
+  <footer>
+    The red ring marks Gällstaö. Images refresh every 10 minutes while the page is open. The time on each image is the satellite scan time in Swedish local time; it comes from the server when it can tell us, otherwise it's the frame we asked for. Satellite frames arrive about 20 minutes after the scan.<br>
+    Images: <a href="https://view.eumetsat.int" target="_blank" rel="noopener">EUMETSAT</a> (Meteosat-12, MTG) and <a href="https://www.smhi.se" target="_blank" rel="noopener">SMHI</a>.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var LAT = 59.37, LON = 17.77, R = 6378137, SIZE = 1500;
+  var ZOOMS = [30000, 125000, 450000];
+  var WMS = "https://view.eumetsat.int/geoserver/wms";
+  var LABELS = "osmgray:dark_labels";
+  var zoom = 1, mode = "auto";
+  try { var s = JSON.parse(localStorage.getItem("skynow") || "{}"); if (s.zoom != null) zoom = s.zoom; if (s.mode) mode = s.mode; } catch (e) {}
+
+  var PRODUCTS = {
+    clouds: {
+      title: "Clouds",
+      night: { tag: "IR 10.5 µm", layer: "mtg_fd:ir105_hrfi",
+        legend: "<span>White</span> high cold cloud · <span>grey</span> low or thin cloud · <span>dark</span> clear" },
+      day: { tag: "GeoColour", layer: "mtg_fd:rgb_geocolour",
+        legend: "<span>White</span> cloud · <span>green and brown</span> clear land · <span>dark blue</span> clear water" }
+    },
+    fog: {
+      title: "Fog & mist",
+      night: { tag: "Night microphysics", layer: "mtg_fd:rgb_fog",
+        legend: "<span>Pale aqua to grey-green</span> fog or low cloud · <span>red-brown, black</span> high cold cloud · <span>pink-purple, grey</span> clear" },
+      day: { tag: "Day snow-fog", layer: "mtg_fd:rgb_snow",
+        legend: "<span>White to pale yellow</span> fog or low cloud · <span>red</span> snow · <span>orange</span> ice cloud" }
+    },
+    rain: {
+      title: "Rain (satellite)",
+      night: { tag: "Rain estimate", layer: "mtg_fd:ir105_hrfi,mtg_fd:h40b", timeLayer: "h40b",
+        legend: "Coloured patches are estimated rain on top of infrared cloud. Coarser than radar but covers the sea." },
+      day: { tag: "Rain estimate", layer: "mtg_fd:ir105_hrfi,mtg_fd:h40b", timeLayer: "h40b",
+        legend: "Coloured patches are estimated rain on top of infrared cloud. Coarser than radar but covers the sea." }
+    }
+  };
+
+  function merc(lat, lon) { return [R * lon * Math.PI / 180, R * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))]; }
+  function sunAlt(d) {
+    var rad = Math.PI / 180, days = d.getTime() / 86400000 - 10957.5;
+    var g = (357.529 + 0.98560028 * days) * rad, q = 280.459 + 0.98564736 * days;
+    var L = (q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * rad, e = (23.439 - 0.00000036 * days) * rad;
+    var dec = Math.asin(Math.sin(e) * Math.sin(L)), ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L));
+    var gmst = (18.697374558 + 24.06570982441908 * days) % 24, ha = (gmst * 15 + LON) * rad - ra;
+    return Math.asin(Math.sin(LAT * rad) * Math.sin(dec) + Math.cos(LAT * rad) * Math.cos(dec) * Math.cos(ha)) / rad;
+  }
+  function guessTime(now) {
+    var t = new Date(now.getTime() - 20 * 60000); t.setUTCSeconds(0, 0);
+    t.setUTCMinutes(t.getUTCMinutes() - t.getUTCMinutes() % 10); return t;
+  }
+  function fmtLocal(d) {
+    return d.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  }
+  function url(layers, t) {
+    var c = merc(LAT, LON), h = ZOOMS[zoom];
+    var bbox = [c[0] - h, c[1] - h, c[0] + h, c[1] + h].map(Math.round).join(",");
+    return WMS + "?service=WMS&version=1.3.0&request=GetMap&layers=" + encodeURIComponent(layers + "," + LABELS) +
+      "&styles=&crs=EPSG:3857&bbox=" + bbox + "&width=" + SIZE + "&height=" + SIZE +
+      "&format=image/png&time=" + t.toISOString().slice(0, 19) + "Z";
+  }
+
+  // Ask the server for the newest scan time of a layer. Works only if the server allows it; otherwise we use our guess.
+  var timeCache = {};
+  function latestTime(layerShort) {
+    if (timeCache[layerShort] && Date.now() - timeCache[layerShort].at < 5 * 60000) return Promise.resolve(timeCache[layerShort].t);
+    var capUrl = "https://view.eumetsat.int/geoserver/mtg_fd/" + layerShort + "/wms?service=WMS&version=1.3.0&request=GetCapabilities";
+    return fetch(capUrl, { cache: "no-store" }).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (x) {
+      var m = x.match(/<Dimension[^>]*name="time"[^>]*default="([^"]+)"/);
+      if (!m) throw 0;
+      var t = new Date(m[1]); if (isNaN(t)) throw 0;
+      timeCache[layerShort] = { t: t, at: Date.now() }; return t;
+    }).catch(function () { return null; });
+  }
+
+  var cardsEl = document.getElementById("cards");
+  var cards = {};
+  Object.keys(PRODUCTS).forEach(function (key) {
+    var sec = document.createElement("section"); sec.className = "card";
+    sec.innerHTML =
+      '<h2><span class="ttl"></span> <span class="tag"></span></h2>' +
+      '<div class="frame"><div class="msg">Loading…</div><img alt="" hidden><div class="pin"></div><div class="stamp" hidden></div></div>' +
+      '<p class="legend"></p>' +
+      '<div class="row"><button class="btn save">Save image</button><a class="btn alt full" target="_blank" rel="noopener">Full size</a></div>';
+    cardsEl.appendChild(sec);
+    cardsEl.style.display = "flex"; cardsEl.style.flexDirection = "column"; cardsEl.style.gap = "18px";
+    cards[key] = {
+      ttl: sec.querySelector(".ttl"), tag: sec.querySelector(".tag"), img: sec.querySelector("img"),
+      msg: sec.querySelector(".msg"), stamp: sec.querySelector(".stamp"), legend: sec.querySelector(".legend"),
+      save: sec.querySelector(".save"), full: sec.querySelector(".full"), src: "", label: "", key: key
+    };
+    cards[key].save.addEventListener("click", function () { saveCard(cards[key]); });
+  });
+
+  function loadCard(c, p, night) {
+    var v = night ? p.night : p.day;
+    c.ttl.textContent = p.title; c.tag.textContent = v.tag; c.legend.innerHTML = v.legend;
+    var layerShort = v.timeLayer || v.layer.split(",")[0].replace("mtg_fd:", "");
+    return latestTime(layerShort).then(function (real) {
+      var t = real || guessTime(new Date());
+      var src = url(v.layer, t);
+      c.label = (p.title + " · " + v.tag + " · " + fmtLocal(t) + (real ? "" : " (approx)"));
+      c.fileTime = t; c.full.href = src;
+      if (src === c.src) return;
+      c.src = src;
+      var img = new Image();
+      img.onload = function () {
+        c.img.src = src; c.img.hidden = false; c.msg.hidden = true;
+        c.stamp.textContent = fmtLocal(t) + (real ? "" : " ≈"); c.stamp.hidden = false;
+      };
+      img.onerror = function () {
+        c.img.hidden = true; c.stamp.hidden = true; c.msg.hidden = false;
+        c.msg.textContent = "Couldn't load this image. The satellite server may be busy; try Refresh in a minute.";
+      };
+      c.msg.hidden = false; c.msg.textContent = "Loading…";
+      img.src = src;
+    });
+  }
+
+  function render(force) {
+    if (force) { timeCache = {}; Object.keys(cards).forEach(function (k) { cards[k].src = ""; }); }
+    var now = new Date(), alt = sunAlt(now);
+    var night = mode === "night" || (mode === "auto" && alt < 3);
+    document.getElementById("tLocal").textContent = now.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Stockholm" });
+    document.getElementById("tSun").textContent = (alt >= 0 ? "+" : "") + alt.toFixed(0) + "°";
+    document.getElementById("tUpd").textContent = now.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Stockholm" });
+    document.querySelectorAll("[data-zoom]").forEach(function (b) { b.setAttribute("aria-pressed", +b.dataset.zoom === zoom ? "true" : "false"); });
+    document.querySelectorAll("[data-mode]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.mode === mode ? "true" : "false"); });
+    Object.keys(PRODUCTS).forEach(function (k) { loadCard(cards[k], PRODUCTS[k], night); });
+  }
+
+  // Save: burn the timestamp into the picture when the server allows it, otherwise save the plain image.
+  function saveCard(c) {
+    if (!c.src) return;
+    var name = "gallstao-" + c.key + "-" + fmtLocal(c.fileTime).replace(/[ :]/g, "").replace(/-/g, "") + ".png";
+    var im = new Image(); im.crossOrigin = "anonymous";
+    im.onload = function () {
+      try {
+        var cv = document.createElement("canvas"); cv.width = im.naturalWidth; cv.height = im.naturalHeight;
+        var g = cv.getContext("2d"); g.drawImage(im, 0, 0);
+        var fs = Math.round(cv.width / 40);
+        g.font = "500 " + fs + "px IBM Plex Mono, Menlo, monospace";
+        var pad = fs * 0.5, w = g.measureText(c.label).width + pad * 2, h = fs * 1.6;
+        g.fillStyle = "rgba(11,6,6,.8)"; g.fillRect(fs * 0.6, cv.height - h - fs * 0.6, w, h);
+        g.fillStyle = "#e8c9c3"; g.textBaseline = "middle"; g.fillText(c.label, fs * 0.6 + pad, cv.height - h / 2 - fs * 0.6);
+        g.strokeStyle = "#e0503e"; g.lineWidth = Math.max(2, fs / 6);
+        g.beginPath(); g.arc(cv.width / 2, cv.height / 2, fs * 0.6, 0, Math.PI * 2); g.stroke();
+        cv.toBlob(function (blob) { blob ? deliver(blob, name) : plainSave(c); }, "image/png");
+      } catch (e) { plainSave(c); }
+    };
+    im.onerror = function () { plainSave(c); };
+    im.src = c.src + "&_cors=1";
+  }
+  function deliver(blob, name) {
+    var file = new File([blob], name, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch(function () {});
+    } else {
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    }
+  }
+  function plainSave(c) {
+    alert("The satellite server doesn't let this page stamp the time into the saved file. Long-press the image and choose Save to Photos, or take a screenshot to keep the time on the picture.");
+  }
+
+  function save() { try { localStorage.setItem("skynow", JSON.stringify({ zoom: zoom, mode: mode })); } catch (e) {} }
+  document.querySelectorAll("[data-zoom]").forEach(function (b) { b.addEventListener("click", function () { zoom = +b.dataset.zoom; save(); render(); }); });
+  document.querySelectorAll("[data-mode]").forEach(function (b) { b.addEventListener("click", function () { mode = b.dataset.mode; save(); render(); }); });
+  document.getElementById("refresh").addEventListener("click", function () { render(true); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) render(); });
+  render();
+  setInterval(render, 10 * 60000);
+})();
+</script>
+</body>
+</html>
