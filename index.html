@@ -34,6 +34,7 @@ body {
 .upd { appearance: none; border: 1px solid var(--red-dim); background: var(--red-dim); color: var(--fg); font: 600 14px var(--body); padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
 .upd:active { filter: brightness(1.2); }
 .upd[disabled] { opacity: .6; }
+.coords { color: var(--fg); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 .src { font: 12px var(--mono); color: var(--muted); margin: -6px 0 0; font-variant-numeric: tabular-nums; }
 .eyebrow, .label { font: 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 
@@ -87,7 +88,7 @@ footer a { color: var(--fg); }
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="eyebrow">Gällstaö · now · <span id="tLocal">--:--</span></div>
+    <div class="eyebrow">Gällstaö · now · <span id="tLocal">--:--</span><br><span class="coords">59°22′ N · 17°46′ E · 8 m</span></div>
     <button class="upd" id="upd" type="button">Update</button>
   </div>
 
