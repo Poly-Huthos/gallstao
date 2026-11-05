@@ -31,11 +31,23 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+/* Night mode: only red on black, to keep dark-adapted eyes */
+body.night {
+  --bg: #000; --panel: #0d0302; --line: #3a0d09; --fg: #ff4a38; --muted: #a8301f;
+  --red: #ff4a38; --red-dim: #4a0f0a; --clear: #ff4a38; --cloud: #7a1c12;
+}
+body.night .big.cloudy { color: #a3271a; }
+body.night .frame img, body.night #maskLegend { filter: grayscale(1) brightness(.8) contrast(1.1); }
+body.night .frame::after { content: ""; position: absolute; inset: 0; background: #ff2a14; mix-blend-mode: multiply; pointer-events: none; z-index: 1; }
+body.night .stamp em { color: var(--fg); }
+body.night .stamp { background: rgba(0,0,0,.85); }
+body.night .stamp, body.night .pin, body.night .ring, body.night .msg { z-index: 2; }
+body.night #maskLegend { mix-blend-mode: normal; }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .upd { appearance: none; border: 1px solid var(--red-dim); background: var(--red-dim); color: var(--fg); font: 600 14px var(--body); padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
 .upd:active { filter: brightness(1.2); }
 .upd[disabled] { opacity: .6; }
-.coords { color: var(--fg); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.coords { font: 13px var(--mono); color: var(--fg); letter-spacing: .04em; margin-top: -10px; font-variant-numeric: tabular-nums; }
 .src { font: 12px var(--mono); color: var(--muted); margin: -6px 0 0; font-variant-numeric: tabular-nums; }
 .eyebrow, .label { font: 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 
@@ -90,9 +102,14 @@ footer a { color: var(--fg); }
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="eyebrow">Gällstaö · now · <span id="tLocal">--:--</span><br><span class="coords">59°22′ N · 17°46′ E · 8 m</span></div>
-    <button class="upd" id="upd" type="button">Update</button>
+    <div class="eyebrow">Gällstaö · now · <span id="tLocal">--:--</span></div>
+    <div class="row" style="flex:0 0 auto;gap:6px">
+      <button class="upd" id="nightBtn" type="button" aria-pressed="false">Red</button>
+      <button class="upd" id="upd" type="button">Update</button>
+    </div>
   </div>
+
+  <div class="coords">59°22′ N · 17°46′ E · 8 m</div>
 
   <div class="now" aria-live="polite">
     <div class="n"><div class="label">Temp</div><b id="nTemp">--</b><span id="nTempSub">Bromma</span></div>
@@ -379,10 +396,28 @@ footer a { color: var(--fg); }
     Object.values(cards).forEach(function (c) { io.observe(c.el); });
   } else { Object.values(cards).forEach(function (c) { c.visible = true; }); }
 
+  // ---------- Night mode: automatic after dusk, or the viewer's own choice ----------
+  var nightChoice = null; // null = automatic
+  try { var nc = localStorage.getItem("skynight"); if (nc === "on" || nc === "off") nightChoice = nc; } catch (e) {}
+  function applyNight() {
+    var on = nightChoice ? nightChoice === "on" : skyFacts(new Date()).sun < -6;
+    document.body.classList.toggle("night", on);
+    var b = document.getElementById("nightBtn");
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.textContent = on ? "Red on" : "Red off";
+    var m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = on ? "#000000" : "#0b0606";
+  }
+  document.getElementById("nightBtn").addEventListener("click", function () {
+    var on = document.body.classList.contains("night");
+    nightChoice = on ? "off" : "on";
+    try { localStorage.setItem("skynight", nightChoice); } catch (e) {}
+    applyNight();
+  });
+
   // ---------- Wiring ----------
   function all() {
     document.getElementById("tLocal").textContent = hm(new Date());
-    renderFacts(); renderGround(); renderVerdict(); renderMask();
+    applyNight(); renderFacts(); renderGround(); renderVerdict(); renderMask();
     Object.values(cards).forEach(renderDetail);
   }
   document.querySelectorAll("[data-mz]").forEach(function (b) {
