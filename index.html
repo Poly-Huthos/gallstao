@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#0b0606">
 <title>Gällstaö Sky Now</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Red-on-black night mode: readable at the telescope without spoiling dark adaptation */
 :root {
@@ -24,32 +24,47 @@
 html, body { margin: 0; background: var(--bg); color: var(--fg); }
 body {
   font: 15px/1.5 var(--body);
-  padding-top: max(20px, env(safe-area-inset-top, 0px));
+  padding-top: max(18px, env(safe-area-inset-top, 0px));
   padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
-.eyebrow, .seg-label { font: 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-h1 { font: 600 28px/1.1 var(--display); margin: 2px 0 6px; text-wrap: balance; }
-.status { font: 13px var(--mono); color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; font-variant-numeric: tabular-nums; }
-.status b { color: var(--fg); font-weight: 500; }
-.controls { display: grid; gap: 10px; }
-.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.seg button { appearance: none; border: 0; background: transparent; color: var(--muted); font: 500 14px var(--body); padding: 10px 6px; cursor: pointer; }
-.seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--red-dim); color: var(--fg); }
-button:focus-visible, a:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.eyebrow, .label { font: 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* Verdict */
+.verdict { display: flex; flex-direction: column; gap: 6px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+.big { font: 700 56px/1 var(--display); letter-spacing: .01em; color: var(--fg); }
+.big.clear { color: var(--red); }
+.sub { font: 14px var(--mono); color: var(--fg); font-variant-numeric: tabular-nums; }
+.sub.muted { color: var(--muted); }
+.dots { display: grid; grid-template-columns: repeat(3, 18px); gap: 4px; margin-top: 4px; }
+.dot { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); background: transparent; }
+.dot.c { background: var(--red); border-color: var(--red); }
+.dot.k { background: #4a3a37; border-color: #4a3a37; }
+.dot.u { background: transparent; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fact { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); min-width: 0; }
+.fact b { display: block; font: 600 22px/1.2 var(--display); }
+.fact span { font-size: 13px; color: var(--muted); }
+
+/* Mask map */
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-.card h2 { font: 600 20px var(--display); margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.card h2 { font: 600 19px var(--display); margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .tag { font: 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--red); border: 1px solid var(--red-dim); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
 .frame { position: relative; aspect-ratio: 1; max-width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .frame .msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font: 13px var(--mono); text-align: center; padding: 16px; }
-.stamp { position: absolute; left: 8px; bottom: 8px; background: rgba(11,6,6,.78); color: var(--fg); font: 500 13px var(--mono); padding: 4px 8px; border-radius: 6px; font-variant-numeric: tabular-nums; pointer-events: none; }
+.stamp { position: absolute; left: 8px; bottom: 8px; background: rgba(11,6,6,.8); color: var(--fg); font: 500 13px var(--mono); padding: 4px 8px; border-radius: 6px; pointer-events: none; }
 .pin { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 2px solid var(--red); border-radius: 50%; pointer-events: none; }
+.ring { position: absolute; left: 50%; top: 50%; border: 1px dashed var(--red); border-radius: 50%; pointer-events: none; opacity: .7; }
 .legend, .note { font-size: 13px; color: var(--muted); margin: 0; }
 .legend span { color: var(--fg); }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { appearance: none; border: 0; background: transparent; color: var(--muted); font: 500 14px var(--body); padding: 9px 6px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--red-dim); color: var(--fg); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn { appearance: none; display: inline-flex; justify-content: center; align-items: center; flex: 1 1 auto; text-decoration: none; background: var(--red); color: var(--bg); border: 0; font: 600 15px var(--body); padding: 11px 14px; border-radius: 10px; cursor: pointer; }
 .btn.alt { background: transparent; color: var(--fg); border: 1px solid var(--line); }
@@ -59,218 +74,240 @@ footer a { color: var(--fg); }
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="eyebrow">59.37° N · 17.77° E · Gällstaö, Ekerö</div>
-    <h1>Sky over Gällstaö, right now</h1>
-    <div class="status">
-      <span>Local <b id="tLocal">--:--</b></span>
-      <span>Sun <b id="tSun">--</b></span>
-      <span>Updated <b id="tUpd">--:--</b></span>
-    </div>
-  </header>
+  <div class="eyebrow">Gällstaö · now · <span id="tLocal">--:--</span></div>
 
-  <div class="controls">
-    <div>
-      <div class="seg-label">View</div>
-      <div class="seg" role="group" aria-label="View size">
-        <button data-zoom="0">Ekerö<br><small>~60 km</small></button>
-        <button data-zoom="1">Mälardalen<br><small>~250 km</small></button>
-        <button data-zoom="2">Baltic<br><small>~900 km</small></button>
-      </div>
-    </div>
-    <div>
-      <div class="seg-label">Satellite mode</div>
-      <div class="seg" role="group" aria-label="Day or night products">
-        <button data-mode="auto">Auto</button>
-        <button data-mode="night">Night</button>
-        <button data-mode="day">Day</button>
-      </div>
-    </div>
-    <div class="row"><button class="btn alt" id="refresh">Refresh now</button></div>
+  <section class="verdict" aria-live="polite">
+    <div class="label">Sky above you</div>
+    <div class="big" id="vWord">Checking…</div>
+    <div class="sub" id="vLine">Asking the satellite</div>
+    <div class="dots" id="vDots" aria-hidden="true"></div>
+    <div class="sub muted" id="vTrend"></div>
+  </section>
+
+  <div class="facts">
+    <div class="fact"><div class="label">Darkness</div><b id="fDark">--</b><span id="fDarkSub"></span></div>
+    <div class="fact"><div class="label">Moon</div><b id="fMoon">--</b><span id="fMoonSub"></span></div>
   </div>
 
-  <div id="cards"></div>
+  <section class="card">
+    <h2>Clear or cloud <span class="tag">Cloud mask</span></h2>
+    <div class="frame" id="maskFrame">
+      <div class="msg">Loading…</div><img id="maskImg" alt="Cloud mask around Gällstaö" hidden>
+      <div class="ring" id="maskRing"></div><div class="pin"></div><div class="stamp" id="maskStamp" hidden></div>
+    </div>
+    <p class="legend"><img id="maskLegend" alt="" style="max-width:100%;display:block;margin-bottom:6px"><span>Ring</span> is about 15 km around Gällstaö. Sees thick cloud well; thin high haze can slip through, so check the detail images below if the verdict says Clear but the stars look washed out.</p>
+    <div class="seg" role="group" aria-label="Map size">
+      <button data-mz="0">~60 km</button><button data-mz="1">~250 km</button><button data-mz="2">~900 km</button>
+    </div>
+  </section>
+
+  <div class="label" style="margin-top:6px">Detail images · tap Full size for the sharpest</div>
+  <div id="cards" style="display:flex;flex-direction:column;gap:16px"></div>
 
   <section class="card">
     <h2>Rain radar <span class="tag">SMHI</span></h2>
-    <p class="note">Sharpest rain picture there is: about 2 km detail, a new frame every 5 minutes, with lightning.</p>
-    <div class="row"><a class="btn" href="https://www.smhi.se/vader/radar-och-satellit/radar-med-blixt/q/sverige/plats/Stockholm/2673730" target="_blank" rel="noopener">Open SMHI radar</a></div>
+    <div class="row"><a class="btn alt" href="https://www.smhi.se/vader/radar-och-satellit/radar-med-blixt/q/sverige/plats/Stockholm/2673730" target="_blank" rel="noopener">Open SMHI radar</a></div>
   </section>
 
   <footer>
-    The red ring marks Gällstaö. Images refresh every 10 minutes while the page is open. The time on each image is the satellite scan time in Swedish local time; it comes from the server when it can tell us, otherwise it's the frame we asked for. Satellite frames arrive about 20 minutes after the scan.<br>
-    Images: <a href="https://view.eumetsat.int" target="_blank" rel="noopener">EUMETSAT</a> (Meteosat-12, MTG) and <a href="https://www.smhi.se" target="_blank" rel="noopener">SMHI</a>.
+    Everything here is observed, not forecast. The verdict uses Meteosat's cloud mask (a new scan every 15 minutes, about 5 km per pixel this far north) at Gällstaö and 8 points around it. Detail images come from Meteosat-12 every 10 minutes. Times are Swedish local time. Satellite data arrives roughly 20–30 minutes after the scan.<br>
+    Data: <a href="https://view.eumetsat.int" target="_blank" rel="noopener">EUMETSAT</a>, <a href="https://www.smhi.se" target="_blank" rel="noopener">SMHI</a>.
   </footer>
 </div>
 
 <script>
 (function () {
-  var LAT = 59.37, LON = 17.77, R = 6378137, SIZE = 1500;
-  var ZOOMS = [30000, 125000, 450000];
+  var LAT = 59.37, LON = 17.77, R = 6378137, rad = Math.PI / 180;
   var WMS = "https://view.eumetsat.int/geoserver/wms";
   var LABELS = "osmgray:dark_labels";
-  var zoom = 1, mode = "auto";
-  try { var s = JSON.parse(localStorage.getItem("skynow") || "{}"); if (s.zoom != null) zoom = s.zoom; if (s.mode) mode = s.mode; } catch (e) {}
+  var ZOOMS = [30000, 125000, 450000];
+  var maskZoom = 1, detailZoom = 1;
+  try { var s = JSON.parse(localStorage.getItem("skynow2") || "{}"); if (s.mz != null) maskZoom = s.mz; } catch (e) {}
 
-  var PRODUCTS = {
-    clouds: {
-      title: "Clouds",
-      night: { tag: "IR 10.5 µm", layer: "mtg_fd:ir105_hrfi",
-        legend: "<span>White</span> high cold cloud · <span>grey</span> low or thin cloud · <span>dark</span> clear" },
-      day: { tag: "GeoColour", layer: "mtg_fd:rgb_geocolour",
-        legend: "<span>White</span> cloud · <span>green and brown</span> clear land · <span>dark blue</span> clear water" }
-    },
-    fog: {
-      title: "Fog & mist",
-      night: { tag: "Night microphysics", layer: "mtg_fd:rgb_fog",
-        legend: "<span>Pale aqua to grey-green</span> fog or low cloud · <span>red-brown, black</span> high cold cloud · <span>pink-purple, grey</span> clear" },
-      day: { tag: "Day snow-fog", layer: "mtg_fd:rgb_snow",
-        legend: "<span>White to pale yellow</span> fog or low cloud · <span>red</span> snow · <span>orange</span> ice cloud" }
-    },
-    rain: {
-      title: "Rain (satellite)",
-      night: { tag: "Rain estimate", layer: "mtg_fd:ir105_hrfi,mtg_fd:h40b", timeLayer: "h40b",
-        legend: "Coloured patches are estimated rain on top of infrared cloud. Coarser than radar but covers the sea." },
-      day: { tag: "Rain estimate", layer: "mtg_fd:ir105_hrfi,mtg_fd:h40b", timeLayer: "h40b",
-        legend: "Coloured patches are estimated rain on top of infrared cloud. Coarser than radar but covers the sea." }
-    }
-  };
-
-  function merc(lat, lon) { return [R * lon * Math.PI / 180, R * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))]; }
-  function sunAlt(d) {
-    var rad = Math.PI / 180, days = d.getTime() / 86400000 - 10957.5;
-    var g = (357.529 + 0.98560028 * days) * rad, q = 280.459 + 0.98564736 * days;
-    var L = (q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * rad, e = (23.439 - 0.00000036 * days) * rad;
-    var dec = Math.asin(Math.sin(e) * Math.sin(L)), ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L));
-    var gmst = (18.697374558 + 24.06570982441908 * days) % 24, ha = (gmst * 15 + LON) * rad - ra;
-    return Math.asin(Math.sin(LAT * rad) * Math.sin(dec) + Math.cos(LAT * rad) * Math.cos(dec) * Math.cos(ha)) / rad;
+  // ---------- Sun and moon (no forecast: just where they are right now) ----------
+  function days(d) { return d.getTime() / 86400000 - 10957.5; }
+  var E = rad * 23.4397;
+  function eq(l, b) {
+    return { ra: Math.atan2(Math.sin(l) * Math.cos(E) - Math.tan(b) * Math.sin(E), Math.cos(l)),
+             dec: Math.asin(Math.sin(b) * Math.cos(E) + Math.cos(b) * Math.sin(E) * Math.sin(l)) };
   }
-  function guessTime(now) {
-    var t = new Date(now.getTime() - 20 * 60000); t.setUTCSeconds(0, 0);
-    t.setUTCMinutes(t.getUTCMinutes() - t.getUTCMinutes() % 10); return t;
+  function altOf(c, d) {
+    var H = rad * (280.16 + 360.9856235 * d) + rad * LON - c.ra, p = rad * LAT;
+    return Math.asin(Math.sin(p) * Math.sin(c.dec) + Math.cos(p) * Math.cos(c.dec) * Math.cos(H)) / rad;
   }
-  function fmtLocal(d) {
-    return d.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  function sunC(d) {
+    var M = rad * (357.5291 + 0.98560028 * d);
+    var C = rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M));
+    return eq(M + C + rad * 102.9372 + Math.PI, 0);
   }
-  function url(layers, t) {
-    var c = merc(LAT, LON), h = ZOOMS[zoom];
-    var bbox = [c[0] - h, c[1] - h, c[0] + h, c[1] + h].map(Math.round).join(",");
-    return WMS + "?service=WMS&version=1.3.0&request=GetMap&layers=" + encodeURIComponent(layers + "," + LABELS) +
-      "&styles=&crs=EPSG:3857&bbox=" + bbox + "&width=" + SIZE + "&height=" + SIZE +
-      "&format=image/png&time=" + t.toISOString().slice(0, 19) + "Z";
+  function moonC(d) {
+    var L = rad * (218.316 + 13.176396 * d), M = rad * (134.963 + 13.064993 * d), F = rad * (93.272 + 13.22935 * d);
+    var c = eq(L + rad * 6.289 * Math.sin(M), rad * 5.128 * Math.sin(F));
+    c.dist = 385001 - 20905 * Math.cos(M); return c;
+  }
+  function skyFacts(now) {
+    var d = days(now), sc = sunC(d), mc = moonC(d);
+    var sAlt = altOf(sc, d), mAlt = altOf(mc, d);
+    var phi = Math.acos(Math.sin(sc.dec) * Math.sin(mc.dec) + Math.cos(sc.dec) * Math.cos(mc.dec) * Math.cos(sc.ra - mc.ra));
+    var inc = Math.atan2(149598000 * Math.sin(phi), mc.dist - 149598000 * Math.cos(phi));
+    return { sun: sAlt, moon: mAlt, lit: (1 + Math.cos(inc)) / 2 };
   }
 
-  // Ask the server for the newest scan time of a layer. Works only if the server allows it; otherwise we use our guess.
-  var timeCache = {};
-  function latestTime(layerShort) {
-    if (timeCache[layerShort] && Date.now() - timeCache[layerShort].at < 5 * 60000) return Promise.resolve(timeCache[layerShort].t);
-    var capUrl = "https://view.eumetsat.int/geoserver/mtg_fd/" + layerShort + "/wms?service=WMS&version=1.3.0&request=GetCapabilities";
-    return fetch(capUrl, { cache: "no-store" }).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (x) {
-      var m = x.match(/<Dimension[^>]*name="time"[^>]*default="([^"]+)"/);
-      if (!m) throw 0;
-      var t = new Date(m[1]); if (isNaN(t)) throw 0;
-      timeCache[layerShort] = { t: t, at: Date.now() }; return t;
-    }).catch(function () { return null; });
+  // ---------- Map helpers ----------
+  function merc(lat, lon) { return [R * lon * rad, R * Math.log(Math.tan(Math.PI / 4 + lat * rad / 2))]; }
+  function bboxMerc(half) { var c = merc(LAT, LON); return [c[0] - half, c[1] - half, c[0] + half, c[1] + half].map(Math.round).join(","); }
+  function scanTime(now, step, lag) {
+    var t = new Date(now.getTime() - lag * 60000); t.setUTCSeconds(0, 0);
+    t.setUTCMinutes(t.getUTCMinutes() - t.getUTCMinutes() % step); return t;
+  }
+  function iso(t) { return t.toISOString().slice(0, 19) + "Z"; }
+  function hm(t) { return t.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Stockholm" }); }
+  function stamp(t) { return t.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }); }
+  function getMap(layers, half, size, fmt, t) {
+    return WMS + "?service=WMS&version=1.3.0&request=GetMap&layers=" + encodeURIComponent(layers) +
+      "&styles=&crs=EPSG:3857&bbox=" + bboxMerc(half) + "&width=" + size + "&height=" + size +
+      "&format=" + fmt + (t ? "&time=" + iso(t) : "");
   }
 
-  var cardsEl = document.getElementById("cards");
-  var cards = {};
-  Object.keys(PRODUCTS).forEach(function (key) {
-    var sec = document.createElement("section"); sec.className = "card";
-    sec.innerHTML =
-      '<h2><span class="ttl"></span> <span class="tag"></span></h2>' +
-      '<div class="frame"><div class="msg">Loading…</div><img alt="" hidden><div class="pin"></div><div class="stamp" hidden></div></div>' +
-      '<p class="legend"></p>' +
-      '<div class="row"><button class="btn save">Save image</button><a class="btn alt full" target="_blank" rel="noopener">Full size</a></div>';
-    cardsEl.appendChild(sec);
-    cardsEl.style.display = "flex"; cardsEl.style.flexDirection = "column"; cardsEl.style.gap = "18px";
-    cards[key] = {
-      ttl: sec.querySelector(".ttl"), tag: sec.querySelector(".tag"), img: sec.querySelector("img"),
-      msg: sec.querySelector(".msg"), stamp: sec.querySelector(".stamp"), legend: sec.querySelector(".legend"),
-      save: sec.querySelector(".save"), full: sec.querySelector(".full"), src: "", label: "", key: key
-    };
-    cards[key].save.addEventListener("click", function () { saveCard(cards[key]); });
-  });
+  // ---------- Verdict: cloud mask at Gällstaö + 8 points ~15 km around ----------
+  var POINTS = [[0, 0]];
+  for (var k = 0; k < 8; k++) POINTS.push([0.135 * Math.cos(k * Math.PI / 4), 0.265 * Math.sin(k * Math.PI / 4)]); // ~15 km
+  function classify(p) {
+    if (!p) return "u";
+    var r = p.RED_BAND, g = p.GREEN_BAND, b = p.BLUE_BAND;
+    if (r == null || g == null || b == null) return "u";
+    if (r > 150 && g > 150 && b > 150) return "k";            // white/grey: cloud
+    if ((g > r + 60 && g >= b) || (b > r + 60 && b >= g)) return "c"; // green land / blue water: clear
+    if (r < 30 && g < 30 && b < 30) return "u";                // black: no data
+    return "k";
+  }
+  function pointQuery(lat, lon, t) {
+    var d = 0.01;
+    var u = WMS + "?service=WMS&version=1.3.0&request=GetFeatureInfo&layers=msg_fes:clm&query_layers=msg_fes:clm&styles=" +
+      "&crs=EPSG:4326&bbox=" + (lat - d) + "," + (lon - d) + "," + (lat + d) + "," + (lon + d) +
+      "&width=3&height=3&i=1&j=1&info_format=application/json" + (t ? "&time=" + iso(t) : "");
+    return fetch(u, { cache: "no-store" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) { return classify(j.features && j.features[0] && j.features[0].properties); })
+      .catch(function () { return "x"; });
+  }
+  function sample(t) {
+    return Promise.all(POINTS.map(function (o) { return pointQuery(LAT + o[0], LON + o[1], t); }));
+  }
+  function count(res, v) { return res.filter(function (x) { return x === v; }).length; }
 
-  function loadCard(c, p, night) {
-    var v = night ? p.night : p.day;
-    c.ttl.textContent = p.title; c.tag.textContent = v.tag; c.legend.innerHTML = v.legend;
-    var layerShort = v.timeLayer || v.layer.split(",")[0].replace("mtg_fd:", "");
-    return latestTime(layerShort).then(function (real) {
-      var t = real || guessTime(new Date());
-      var src = url(v.layer, t);
-      c.label = (p.title + " · " + v.tag + " · " + fmtLocal(t) + (real ? "" : " (approx)"));
-      c.fileTime = t; c.full.href = src;
-      if (src === c.src) return;
-      c.src = src;
-      var img = new Image();
-      img.onload = function () {
-        c.img.src = src; c.img.hidden = false; c.msg.hidden = true;
-        c.stamp.textContent = fmtLocal(t) + (real ? "" : " ≈"); c.stamp.hidden = false;
-      };
-      img.onerror = function () {
-        c.img.hidden = true; c.stamp.hidden = true; c.msg.hidden = false;
-        c.msg.textContent = "Couldn't load this image. The satellite server may be busy; try Refresh in a minute.";
-      };
-      c.msg.hidden = false; c.msg.textContent = "Loading…";
-      img.src = src;
+  function renderVerdict() {
+    var now = new Date(), t = scanTime(now, 15, 30), tPrev = new Date(t.getTime() - 30 * 60000);
+    var word = document.getElementById("vWord"), line = document.getElementById("vLine"),
+        dots = document.getElementById("vDots"), trend = document.getElementById("vTrend");
+    Promise.all([sample(t), sample(tPrev)]).then(function (both) {
+      var res = both[0], prev = both[1];
+      if (count(res, "x") === res.length) {
+        word.textContent = "See map"; word.className = "big";
+        line.textContent = "The satellite server didn't answer the quick check. The cloud mask map below shows the same thing.";
+        dots.innerHTML = ""; trend.textContent = ""; return;
+      }
+      var known = res.filter(function (x) { return x === "c" || x === "k"; }).length, clear = count(res, "c");
+      var centre = res[0], ring = res.slice(1), ringClear = count(ring, "c");
+      var w;
+      if (centre === "c" && ringClear >= 6) w = "Clear";
+      else if (centre === "c") w = "Mostly clear";
+      else if (centre === "k" && ringClear >= 4) w = "Patchy";
+      else if (centre === "k") w = "Cloudy";
+      else w = known ? (clear >= known / 2 ? "Mostly clear" : "Cloudy") : "Unknown";
+      word.textContent = w; word.className = "big" + (w === "Clear" || w === "Mostly clear" ? " clear" : "");
+      line.textContent = (centre === "c" ? "Clear overhead" : centre === "k" ? "Cloud overhead" : "Overhead unknown") +
+        " · " + ringClear + " of 8 nearby points clear · scan " + hm(t);
+      // dots: 3x3 compass layout (NW N NE / W me E / SW S SE)
+      var order = [3, 2, 1, 4, 0, 8, 5, 6, 7], html = "";
+      order.forEach(function (i) { html += '<div class="dot ' + res[i] + '"></div>'; });
+      dots.innerHTML = html;
+      var pc = count(prev, "c"), nc = clear;
+      if (count(prev, "x") === prev.length) trend.textContent = "";
+      else trend.textContent = "30 min earlier: " + pc + " of 9 clear → " + (nc > pc ? "clearing" : nc < pc ? "clouding over" : "no change");
     });
   }
 
-  function render(force) {
-    if (force) { timeCache = {}; Object.keys(cards).forEach(function (k) { cards[k].src = ""; }); }
-    var now = new Date(), alt = sunAlt(now);
-    var night = mode === "night" || (mode === "auto" && alt < 3);
-    document.getElementById("tLocal").textContent = now.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Stockholm" });
-    document.getElementById("tSun").textContent = (alt >= 0 ? "+" : "") + alt.toFixed(0) + "°";
-    document.getElementById("tUpd").textContent = now.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Stockholm" });
-    document.querySelectorAll("[data-zoom]").forEach(function (b) { b.setAttribute("aria-pressed", +b.dataset.zoom === zoom ? "true" : "false"); });
-    document.querySelectorAll("[data-mode]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.mode === mode ? "true" : "false"); });
-    Object.keys(PRODUCTS).forEach(function (k) { loadCard(cards[k], PRODUCTS[k], night); });
+  // ---------- Mask map ----------
+  function renderMask() {
+    var now = new Date(), t = scanTime(now, 15, 30), half = ZOOMS[maskZoom];
+    var img = document.getElementById("maskImg"), frame = document.getElementById("maskFrame"), st = document.getElementById("maskStamp");
+    var src = getMap("msg_fes:clm," + LABELS, half, 600, "image/png", t);
+    var ringPx = 15000 / (2 * half) * 100; // ring diameter as % of frame
+    var ring = document.getElementById("maskRing");
+    ring.style.width = ring.style.height = (ringPx * 2) + "%"; ring.style.marginLeft = ring.style.marginTop = (-ringPx) + "%";
+    ring.hidden = maskZoom === 2;
+    if (img.dataset.src === src) return;
+    img.dataset.src = src;
+    var msg = frame.querySelector(".msg"); msg.hidden = false; msg.textContent = "Loading…";
+    var pre = new Image();
+    pre.onload = function () { img.src = src; img.hidden = false; msg.hidden = true; st.textContent = stamp(t); st.hidden = false; };
+    pre.onerror = function () { msg.textContent = "Couldn't load the cloud mask. Try again in a minute."; };
+    pre.src = src;
+    document.querySelectorAll("[data-mz]").forEach(function (b) { b.setAttribute("aria-pressed", +b.dataset.mz === maskZoom ? "true" : "false"); });
+  }
+  document.getElementById("maskLegend").src = WMS + "?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image/png&width=20&height=20&layer=msg_fes:clm";
+
+  // ---------- Darkness and moon ----------
+  function renderFacts() {
+    var f = skyFacts(new Date());
+    var dark = f.sun > 0 ? "Daylight" : f.sun > -6 ? "Dusk / dawn" : f.sun > -12 ? "Too bright" : f.sun > -18 ? "Nearly dark" : "Fully dark";
+    document.getElementById("fDark").textContent = dark;
+    document.getElementById("fDarkSub").textContent = "Sun " + f.sun.toFixed(0) + "° · deep-sky needs below −18°";
+    var lit = Math.round(f.lit * 100);
+    document.getElementById("fMoon").textContent = f.moon > 0 ? "Up, " + lit + "% lit" : "Down";
+    document.getElementById("fMoonSub").textContent = f.moon > 0 ? "Altitude " + f.moon.toFixed(0) + "°" + (lit > 50 ? " · bright sky" : "") : (lit + "% lit when it rises");
   }
 
-  // Save: burn the timestamp into the picture when the server allows it, otherwise save the plain image.
-  function saveCard(c) {
-    if (!c.src) return;
-    var name = "gallstao-" + c.key + "-" + fmtLocal(c.fileTime).replace(/[ :]/g, "").replace(/-/g, "") + ".png";
-    var im = new Image(); im.crossOrigin = "anonymous";
-    im.onload = function () {
-      try {
-        var cv = document.createElement("canvas"); cv.width = im.naturalWidth; cv.height = im.naturalHeight;
-        var g = cv.getContext("2d"); g.drawImage(im, 0, 0);
-        var fs = Math.round(cv.width / 40);
-        g.font = "500 " + fs + "px IBM Plex Mono, Menlo, monospace";
-        var pad = fs * 0.5, w = g.measureText(c.label).width + pad * 2, h = fs * 1.6;
-        g.fillStyle = "rgba(11,6,6,.8)"; g.fillRect(fs * 0.6, cv.height - h - fs * 0.6, w, h);
-        g.fillStyle = "#e8c9c3"; g.textBaseline = "middle"; g.fillText(c.label, fs * 0.6 + pad, cv.height - h / 2 - fs * 0.6);
-        g.strokeStyle = "#e0503e"; g.lineWidth = Math.max(2, fs / 6);
-        g.beginPath(); g.arc(cv.width / 2, cv.height / 2, fs * 0.6, 0, Math.PI * 2); g.stroke();
-        cv.toBlob(function (blob) { blob ? deliver(blob, name) : plainSave(c); }, "image/png");
-      } catch (e) { plainSave(c); }
-    };
-    im.onerror = function () { plainSave(c); };
-    im.src = c.src + "&_cors=1";
+  // ---------- Detail images (small and fast; full size on tap) ----------
+  var DETAIL = [
+    { key: "fog", title: "Fog & mist", night: ["Night microphysics", "mtg_fd:rgb_fog", "<span>Pale aqua to grey-green</span> fog or low cloud · <span>red-brown, black</span> high cloud · <span>pink-purple, grey</span> clear"],
+      day: ["Day snow-fog", "mtg_fd:rgb_snow", "<span>White to pale yellow</span> fog or low cloud · <span>red</span> snow · <span>orange</span> ice cloud"] },
+    { key: "clouds", title: "Clouds", night: ["Infrared", "mtg_fd:ir105_hrfi", "<span>White</span> high cold cloud · <span>grey</span> low or thin cloud · <span>dark</span> clear"],
+      day: ["GeoColour", "mtg_fd:rgb_geocolour", "<span>White</span> cloud · <span>green, brown</span> clear land · <span>dark blue</span> clear water"] }
+  ];
+  var cardsEl = document.getElementById("cards"), cards = {};
+  DETAIL.forEach(function (p) {
+    var sec = document.createElement("section"); sec.className = "card";
+    sec.innerHTML = '<h2><span>' + p.title + '</span> <span class="tag"></span></h2>' +
+      '<div class="frame"><div class="msg">Loads when you scroll here</div><img alt="" hidden><div class="pin"></div><div class="stamp" hidden></div></div>' +
+      '<p class="legend"></p><div class="row"><a class="btn alt full" target="_blank" rel="noopener">Full size</a></div>';
+    cardsEl.appendChild(sec);
+    cards[p.key] = { el: sec, p: p, tag: sec.querySelector(".tag"), img: sec.querySelector("img"), msg: sec.querySelector(".msg"),
+      st: sec.querySelector(".stamp"), lg: sec.querySelector(".legend"), full: sec.querySelector(".full"), visible: false };
+  });
+  function renderDetail(c) {
+    var night = skyFacts(new Date()).sun < 3, v = night ? c.p.night : c.p.day;
+    var t = scanTime(new Date(), 10, 20), half = ZOOMS[detailZoom];
+    c.tag.textContent = v[0]; c.lg.innerHTML = v[2];
+    c.full.href = getMap(v[1] + "," + LABELS, half, 1600, "image/png", t);
+    if (!c.visible) return;
+    var src = getMap(v[1] + "," + LABELS, half, 700, "image/jpeg", t);
+    if (c.img.dataset.src === src) return;
+    c.img.dataset.src = src; c.msg.hidden = false; c.msg.textContent = "Loading…";
+    var pre = new Image();
+    pre.onload = function () { c.img.src = src; c.img.hidden = false; c.msg.hidden = true; c.st.textContent = stamp(t); c.st.hidden = false; };
+    pre.onerror = function () { c.msg.textContent = "Couldn't load. Try again in a minute."; };
+    pre.src = src;
   }
-  function deliver(blob, name) {
-    var file = new File([blob], name, { type: "image/png" });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file] }).catch(function () {});
-    } else {
-      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
-      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-    }
-  }
-  function plainSave(c) {
-    alert("The satellite server doesn't let this page stamp the time into the saved file. Long-press the image and choose Save to Photos, or take a screenshot to keep the time on the picture.");
-  }
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { var c = Object.values(cards).find(function (x) { return x.el === e.target; }); c.visible = true; renderDetail(c); io.unobserve(e.target); } });
+    }, { rootMargin: "200px" });
+    Object.values(cards).forEach(function (c) { io.observe(c.el); });
+  } else { Object.values(cards).forEach(function (c) { c.visible = true; }); }
 
-  function save() { try { localStorage.setItem("skynow", JSON.stringify({ zoom: zoom, mode: mode })); } catch (e) {} }
-  document.querySelectorAll("[data-zoom]").forEach(function (b) { b.addEventListener("click", function () { zoom = +b.dataset.zoom; save(); render(); }); });
-  document.querySelectorAll("[data-mode]").forEach(function (b) { b.addEventListener("click", function () { mode = b.dataset.mode; save(); render(); }); });
-  document.getElementById("refresh").addEventListener("click", function () { render(true); });
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) render(); });
-  render();
-  setInterval(render, 10 * 60000);
+  // ---------- Wiring ----------
+  function all() {
+    document.getElementById("tLocal").textContent = hm(new Date());
+    renderFacts(); renderVerdict(); renderMask();
+    Object.values(cards).forEach(renderDetail);
+  }
+  document.querySelectorAll("[data-mz]").forEach(function (b) {
+    b.addEventListener("click", function () { maskZoom = +b.dataset.mz; try { localStorage.setItem("skynow2", JSON.stringify({ mz: maskZoom })); } catch (e) {} renderMask(); });
+  });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) all(); });
+  all();
+  setInterval(all, 5 * 60000);
 })();
 </script>
 </body>

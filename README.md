@@ -1,13 +1,10 @@
 # Gällstaö Sky Now
 
-A one-page phone viewer for the newest satellite images over Gällstaö (Ekerö, Stockholm):
+A one-page phone viewer that answers one question for deep-sky imaging: **what is the sky above Gällstaö doing right now?** Observations only, no forecast.
 
-- **Clouds**: Meteosat-12 GeoColour by day, infrared 10.5 µm at night
-- **Fog & mist**: Night Microphysics RGB at night, Day Snow-Fog RGB by day
-- **Rain**: satellite rain estimate, plus a link to SMHI's radar
+- **Verdict**: Clear / Mostly clear / Patchy / Cloudy, from Meteosat's cloud mask at Gällstaö and 8 points about 15 km around it, plus the change over the last 30 minutes
+- **Darkness and moon**: sun depth below the horizon and the moon's altitude and phase, calculated in the page
+- **Cloud mask map**: clear vs cloud around Gällstaö, three zoom levels
+- **Detail images**: Meteosat-12 fog/low-cloud and cloud images, loaded only when scrolled to; full size on tap
 
-Each image is centred on Gällstaö (red ring), stamped with the scan time in Swedish time, and refreshes every 10 minutes. Day or night products are picked from the sun's height. Three zoom levels: about 60, 250 and 900 km across.
-
-Open `index.html` in a browser, or publish with GitHub Pages and add it to your phone's home screen.
-
-Data: [EUMETSAT View](https://view.eumetsat.int) WMS (MTG FCI) and [SMHI](https://www.smhi.se).
+Data: [EUMETSAT View](https://view.eumetsat.int) WMS and [SMHI](https://www.smhi.se).
