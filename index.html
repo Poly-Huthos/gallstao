@@ -238,7 +238,7 @@ footer a { color: var(--fg); }
     ring.hidden = maskZoom === 2;
     if (img.dataset.src === src) return;
     img.dataset.src = src;
-    var msg = frame.querySelector(".msg"); msg.hidden = false; msg.textContent = "Loading…";
+    var msg = frame.querySelector(".msg"); if (img.hidden) { msg.hidden = false; msg.textContent = "Loading…"; } else { st.textContent = "updating…"; }
     var pre = new Image();
     pre.onload = function () { img.src = src; img.hidden = false; msg.hidden = true; st.textContent = stamp(t); st.hidden = false; };
     pre.onerror = function () { msg.textContent = "Couldn't load the cloud mask. Try again in a minute."; };
@@ -276,14 +276,14 @@ footer a { color: var(--fg); }
       st: sec.querySelector(".stamp"), lg: sec.querySelector(".legend"), full: sec.querySelector(".full"), visible: false };
   });
   function renderDetail(c) {
-    var night = skyFacts(new Date()).sun < 3, v = night ? c.p.night : c.p.day;
+    var night = skyFacts(new Date(Date.now() - 20 * 60000)).sun < 10, v = night ? c.p.night : c.p.day;
     var t = scanTime(new Date(), 10, 20), half = ZOOMS[detailZoom];
     c.tag.textContent = v[0]; c.lg.innerHTML = v[2];
     c.full.href = getMap(v[1] + "," + LABELS, half, 1600, "image/png", t);
     if (!c.visible) return;
     var src = getMap(v[1] + "," + LABELS, half, 700, "image/jpeg", t);
     if (c.img.dataset.src === src) return;
-    c.img.dataset.src = src; c.msg.hidden = false; c.msg.textContent = "Loading…";
+    c.img.dataset.src = src; if (c.img.hidden) { c.msg.hidden = false; c.msg.textContent = "Loading…"; } else { c.st.textContent = "updating…"; }
     var pre = new Image();
     pre.onload = function () { c.img.src = src; c.img.hidden = false; c.msg.hidden = true; c.st.textContent = stamp(t); c.st.hidden = false; };
     pre.onerror = function () { c.msg.textContent = "Couldn't load. Try again in a minute."; };
