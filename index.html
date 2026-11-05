@@ -61,7 +61,8 @@ body {
 .frame { position: relative; aspect-ratio: 1; max-width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .frame .msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font: 13px var(--mono); text-align: center; padding: 16px; }
-.stamp { position: absolute; left: 8px; bottom: 8px; background: rgba(11,6,6,.8); color: var(--fg); font: 500 13px var(--mono); padding: 4px 8px; border-radius: 6px; pointer-events: none; }
+.stamp { position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 16px); background: rgba(11,6,6,.82); color: var(--fg); font: 500 12px/1.45 var(--mono); padding: 5px 9px; border-radius: 6px; pointer-events: none; white-space: pre-line; font-variant-numeric: tabular-nums; }
+.stamp em { font-style: normal; color: var(--red); }
 .pin { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 2px solid var(--red); border-radius: 50%; pointer-events: none; }
 .ring { position: absolute; left: 50%; top: 50%; border: 1px dashed var(--red); border-radius: 50%; pointer-events: none; opacity: .7; }
 .legend, .note { font-size: 13px; color: var(--muted); margin: 0; }
@@ -176,6 +177,12 @@ footer a { color: var(--fg); }
   function iso(t) { return t.toISOString().slice(0, 19) + "Z"; }
   function hm(t) { return t.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Stockholm" }); }
   function stamp(t) { return t.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }); }
+  // Scan label: satellite, instrument, product and the scan's number within the UTC day
+  function scanLabel(sat, inst, prod, t, step) {
+    var per = 1440 / step, n = Math.floor((t.getUTCHours() * 60 + t.getUTCMinutes()) / step) + 1;
+    var nn = String(n).padStart(String(per).length, "0");
+    return "<em>" + sat + "</em> \u00b7 " + inst + "\n" + prod + " \u00b7 scan " + nn + "/" + per + "\n" + stamp(t) + " \u00b7 " + t.toISOString().slice(11, 16) + " UTC";
+  }
   function getMap(layers, half, size, fmt, t) {
     return WMS + "?service=WMS&version=1.3.0&request=GetMap&layers=" + encodeURIComponent(layers) +
       "&styles=&crs=EPSG:3857&bbox=" + bboxMerc(half) + "&width=" + size + "&height=" + size +
@@ -234,7 +241,7 @@ footer a { color: var(--fg); }
       }
       word.textContent = w; word.className = "big" + (w === "Clear" || w === "Mostly clear" ? " clear" : "");
       line.textContent = (centre === "c" ? "Clear overhead" : centre === "k" ? "Cloud overhead" : "Overhead unknown") +
-        " · " + ringClear + " of 8 nearby points clear · scan " + hm(t);
+        " · " + ringClear + " of 8 nearby points clear · scan " + hm(t) + " (MSG #" + (Math.floor((t.getUTCHours() * 60 + t.getUTCMinutes()) / 15) + 1) + ")";
       // dots: 3x3 compass layout (NW N NE / W me E / SW S SE)
       var order = [3, 2, 1, 4, 0, 8, 5, 6, 7], html = "";
       order.forEach(function (i) { html += '<div class="dot ' + res[i] + '"></div>'; });
@@ -258,7 +265,7 @@ footer a { color: var(--fg); }
     img.dataset.src = src;
     var msg = frame.querySelector(".msg"); if (img.hidden) { msg.hidden = false; msg.textContent = "Loading…"; } else { st.textContent = "updating…"; }
     var pre = new Image();
-    pre.onload = function () { img.src = src; img.hidden = false; msg.hidden = true; st.textContent = stamp(t); st.hidden = false; };
+    pre.onload = function () { img.src = src; img.hidden = false; msg.hidden = true; st.innerHTML = scanLabel("Meteosat MSG", "SEVIRI", "Cloud mask", t, 15); st.hidden = false; };
     pre.onerror = function () { msg.textContent = "Couldn't load the cloud mask. Try again in a minute."; };
     pre.src = src;
     document.querySelectorAll("[data-mz]").forEach(function (b) { b.setAttribute("aria-pressed", +b.dataset.mz === maskZoom ? "true" : "false"); });
@@ -347,7 +354,7 @@ footer a { color: var(--fg); }
     if (c.img.dataset.src === src) return;
     c.img.dataset.src = src; if (c.img.hidden) { c.msg.hidden = false; c.msg.textContent = "Loading…"; } else { c.st.textContent = "updating…"; }
     var pre = new Image();
-    pre.onload = function () { c.img.src = src; c.img.hidden = false; c.msg.hidden = true; c.st.textContent = stamp(t); c.st.hidden = false; };
+    pre.onload = function () { c.img.src = src; c.img.hidden = false; c.msg.hidden = true; c.st.innerHTML = scanLabel("Meteosat-12", "FCI", v[0], t, 10); c.st.hidden = false; };
     pre.onerror = function () { c.msg.textContent = "Couldn't load. Try again in a minute."; };
     pre.src = src;
   }
