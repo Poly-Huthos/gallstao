@@ -32,6 +32,12 @@ body {
 .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .eyebrow, .label { font: 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 
+/* Now strip */
+.now { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.n { padding: 10px 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); min-width: 0; }
+.n b { display: block; font: 700 24px/1.1 var(--display); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.n .label { font-size: 11px; }
+.n span { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Verdict */
 .verdict { display: flex; flex-direction: column; gap: 6px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
 .big { font: 700 56px/1 var(--display); letter-spacing: .01em; color: var(--fg); }
@@ -76,6 +82,13 @@ footer a { color: var(--fg); }
 <div class="wrap">
   <div class="eyebrow">Gällstaö · now · <span id="tLocal">--:--</span></div>
 
+  <div class="now" aria-live="polite">
+    <div class="n"><div class="label">Temp</div><b id="nTemp">--</b><span id="nTempSub">Bromma</span></div>
+    <div class="n"><div class="label">Cloud</div><b id="nCloud">--</b><span id="nCloudSub">satellite</span></div>
+    <div class="n"><div class="label">Sight</div><b id="nVis">--</b><span id="nVisSub">visibility</span></div>
+    <div class="n"><div class="label">Humid</div><b id="nHum">--</b><span id="nHumSub">humidity</span></div>
+  </div>
+
   <section class="verdict" aria-live="polite">
     <div class="label">Sky above you</div>
     <div class="big" id="vWord">Checking…</div>
@@ -110,7 +123,7 @@ footer a { color: var(--fg); }
   </section>
 
   <footer>
-    Everything here is observed, not forecast. The verdict uses Meteosat's cloud mask (a new scan every 15 minutes, about 5 km per pixel this far north) at Gällstaö and 8 points around it. Detail images come from Meteosat-12 every 10 minutes. Times are Swedish local time. Satellite data arrives roughly 20–30 minutes after the scan.<br>
+    Everything here is observed, not forecast. Temperature, humidity and visibility come from SMHI's weather station at Bromma, about 10 km away, updated every hour. Visibility over 30 km with dry air means clean, transparent air; falling visibility and high humidity mean haze or mist. The verdict uses Meteosat's cloud mask (a new scan every 15 minutes, about 5 km per pixel this far north) at Gällstaö and 8 points around it. Detail images come from Meteosat-12 every 10 minutes. Times are Swedish local time. Satellite data arrives roughly 20–30 minutes after the scan.<br>
     Data: <a href="https://view.eumetsat.int" target="_blank" rel="noopener">EUMETSAT</a>, <a href="https://www.smhi.se" target="_blank" rel="noopener">SMHI</a>.
   </footer>
 </div>
@@ -214,6 +227,11 @@ footer a { color: var(--fg); }
       else if (centre === "k" && ringClear >= 4) w = "Patchy";
       else if (centre === "k") w = "Cloudy";
       else w = known ? (clear >= known / 2 ? "Mostly clear" : "Cloudy") : "Unknown";
+      if (known) {
+        var pct = Math.round((known - clear) / known * 10) * 10;
+        document.getElementById("nCloud").textContent = pct + "%";
+        document.getElementById("nCloudSub").textContent = "within 15 km";
+      }
       word.textContent = w; word.className = "big" + (w === "Clear" || w === "Mostly clear" ? " clear" : "");
       line.textContent = (centre === "c" ? "Clear overhead" : centre === "k" ? "Cloud overhead" : "Overhead unknown") +
         " · " + ringClear + " of 8 nearby points clear · scan " + hm(t);
@@ -246,6 +264,50 @@ footer a { color: var(--fg); }
     document.querySelectorAll("[data-mz]").forEach(function (b) { b.setAttribute("aria-pressed", +b.dataset.mz === maskZoom ? "true" : "false"); });
   }
   document.getElementById("maskLegend").src = WMS + "?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image/png&width=20&height=20&layer=msg_fes:clm";
+
+  // ---------- Ground observations: SMHI station Stockholm-Bromma (about 10 km away), METAR as backup ----------
+  function smhi(param) {
+    return fetch("https://opendata-download-metobs.smhi.se/api/version/1.0/parameter/" + param + "/station/97200/period/latest-hour/data.json", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) { var v = j.value && j.value[j.value.length - 1]; return v ? { v: parseFloat(v.value), t: new Date(v.date) } : null; })
+      .catch(function () { return null; });
+  }
+  function metar() {
+    return fetch("https://aviationweather.gov/api/data/metar?ids=ESSB,ESSA&format=json", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (a) { return (a && a[0]) || null; }).catch(function () { return null; });
+  }
+  function rhFrom(t, d) { function e(x) { return Math.exp(17.625 * x / (243.04 + x)); } return 100 * e(d) / e(t); }
+  function air(visKm, rh) {
+    if (visKm == null) return rh != null && rh >= 95 ? "misty?" : "";
+    if (visKm < 1) return "fog";
+    if (visKm < 5) return "mist";
+    if (visKm < 15 || (rh != null && rh >= 93)) return "hazy";
+    if (visKm < 30 || (rh != null && rh >= 85)) return "some haze";
+    return "clear air";
+  }
+  function renderGround() {
+    Promise.all([smhi(1), smhi(6), smhi(12)]).then(function (r) {
+      var temp = r[0] ? r[0].v : null, rh = r[1] ? r[1].v : null, vis = r[2] && !isNaN(r[2].v) ? r[2].v / 1000 : null;
+      var when = (r[0] || r[1] || r[2] || {}).t;
+      var p = (temp == null || rh == null) ? metar() : Promise.resolve(null);
+      return p.then(function (m) {
+        var src = "Bromma";
+        if (m) {
+          if (temp == null && m.temp != null) temp = m.temp;
+          if (rh == null && m.temp != null && m.dewp != null) rh = rhFrom(m.temp, m.dewp);
+          if (vis == null && m.visib != null && m.visib !== "6+") vis = parseFloat(m.visib) * 1.609;
+          if (!when) { when = new Date(m.reportTime); src = m.icaoId === "ESSB" ? "Bromma" : "Arlanda"; }
+        }
+        document.getElementById("nTemp").textContent = temp != null ? Math.round(temp) + "\u00b0" : "--";
+        document.getElementById("nTempSub").textContent = (src === "Bromma" ? "" : src + " ") + (when ? hm(when) : "");
+        document.getElementById("nHum").textContent = rh != null ? Math.round(rh) + "%" : "--";
+        document.getElementById("nHumSub").textContent = rh == null ? "humidity" : rh >= 90 ? "dew risk" : rh >= 80 ? "damp" : "dry";
+        document.getElementById("nVis").textContent = vis != null ? (vis >= 10 ? Math.round(vis) : vis.toFixed(1)) + " km" : "--";
+        document.getElementById("nVisSub").textContent = air(vis, rh) || "visibility";
+      });
+    });
+  }
 
   // ---------- Darkness and moon ----------
   function renderFacts() {
@@ -299,7 +361,7 @@ footer a { color: var(--fg); }
   // ---------- Wiring ----------
   function all() {
     document.getElementById("tLocal").textContent = hm(new Date());
-    renderFacts(); renderVerdict(); renderMask();
+    renderFacts(); renderGround(); renderVerdict(); renderMask();
     Object.values(cards).forEach(renderDetail);
   }
   document.querySelectorAll("[data-mz]").forEach(function (b) {
