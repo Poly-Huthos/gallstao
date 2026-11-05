@@ -30,6 +30,11 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.upd { appearance: none; border: 1px solid var(--red-dim); background: var(--red-dim); color: var(--fg); font: 600 14px var(--body); padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.upd:active { filter: brightness(1.2); }
+.upd[disabled] { opacity: .6; }
+.src { font: 12px var(--mono); color: var(--muted); margin: -6px 0 0; font-variant-numeric: tabular-nums; }
 .eyebrow, .label { font: 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 
 /* Now strip */
@@ -81,7 +86,10 @@ footer a { color: var(--fg); }
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Gällstaö · now · <span id="tLocal">--:--</span></div>
+  <div class="top">
+    <div class="eyebrow">Gällstaö · now · <span id="tLocal">--:--</span></div>
+    <button class="upd" id="upd" type="button">Update</button>
+  </div>
 
   <div class="now" aria-live="polite">
     <div class="n"><div class="label">Temp</div><b id="nTemp">--</b><span id="nTempSub">Bromma</span></div>
@@ -89,6 +97,7 @@ footer a { color: var(--fg); }
     <div class="n"><div class="label">Sight</div><b id="nVis">--</b><span id="nVisSub">visibility</span></div>
     <div class="n"><div class="label">Humid</div><b id="nHum">--</b><span id="nHumSub">humidity</span></div>
   </div>
+  <p class="src"><span id="srcGround">Temp, sight, humid: SMHI Bromma</span><br><span id="srcSat">Cloud: satellite</span></p>
 
   <section class="verdict" aria-live="polite">
     <div class="label">Sky above you</div>
@@ -238,6 +247,7 @@ footer a { color: var(--fg); }
         var pct = Math.round((known - clear) / known * 10) * 10;
         document.getElementById("nCloud").textContent = pct + "%";
         document.getElementById("nCloudSub").textContent = "within 15 km";
+        document.getElementById("srcSat").textContent = "Cloud: Meteosat scan " + hm(t) + " (every 15 min)";
       }
       word.textContent = w; word.className = "big" + (w === "Clear" || w === "Mostly clear" ? " clear" : "");
       line.textContent = (centre === "c" ? "Clear overhead" : centre === "k" ? "Cloud overhead" : "Overhead unknown") +
@@ -307,7 +317,8 @@ footer a { color: var(--fg); }
           if (!when) { when = new Date(m.reportTime); src = m.icaoId === "ESSB" ? "Bromma" : "Arlanda"; }
         }
         document.getElementById("nTemp").textContent = temp != null ? Math.round(temp) + "\u00b0" : "--";
-        document.getElementById("nTempSub").textContent = (src === "Bromma" ? "" : src + " ") + (when ? hm(when) : "");
+        document.getElementById("nTempSub").textContent = src;
+        document.getElementById("srcGround").textContent = "Temp, sight, humid: " + (src === "Bromma" ? "SMHI Bromma" : src + " airport") + (when ? ", reading " + hm(when) : "") + " (hourly)";
         document.getElementById("nHum").textContent = rh != null ? Math.round(rh) + "%" : "--";
         document.getElementById("nHumSub").textContent = rh == null ? "humidity" : rh >= 90 ? "dew risk" : rh >= 80 ? "damp" : "dry";
         document.getElementById("nVis").textContent = vis != null ? (vis >= 10 ? Math.round(vis) : vis.toFixed(1)) + " km" : "--";
@@ -373,6 +384,13 @@ footer a { color: var(--fg); }
   }
   document.querySelectorAll("[data-mz]").forEach(function (b) {
     b.addEventListener("click", function () { maskZoom = +b.dataset.mz; try { localStorage.setItem("skynow2", JSON.stringify({ mz: maskZoom })); } catch (e) {} renderMask(); });
+  });
+  document.getElementById("upd").addEventListener("click", function () {
+    var b = this; b.disabled = true; b.textContent = "Updating…";
+    var m = document.getElementById("maskImg"); m.dataset.src = "";
+    Object.values(cards).forEach(function (c) { c.img.dataset.src = ""; });
+    all();
+    setTimeout(function () { b.disabled = false; b.textContent = "Update"; }, 2500);
   });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) all(); });
   all();
