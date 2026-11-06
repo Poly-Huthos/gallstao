@@ -144,7 +144,7 @@ footer a { color: var(--fg); }
     </div>
   </section>
 
-  <div class="label" style="margin-top:6px">Detail images · tap Full size for the sharpest</div>
+  <div class="label" style="margin-top:6px">Detail images · same zoom as the map above · tap Full size for the sharpest</div>
   <div id="cards" style="display:flex;flex-direction:column;gap:16px"></div>
 
   <section class="card">
@@ -164,7 +164,7 @@ footer a { color: var(--fg); }
   var WMS = "https://view.eumetsat.int/geoserver/wms";
   var LABELS = "osmgray:dark_labels";
   var ZOOMS = [30000, 125000, 450000];
-  var maskZoom = 1, detailZoom = 1;
+  var maskZoom = 1;
   try { var s = JSON.parse(localStorage.getItem("skynow2") || "{}"); if (s.mz != null) maskZoom = s.mz; } catch (e) {}
 
   // ---------- Sun and moon (no forecast: just where they are right now) ----------
@@ -377,7 +377,7 @@ footer a { color: var(--fg); }
   });
   function renderDetail(c) {
     var night = skyFacts(new Date(Date.now() - 20 * 60000)).sun < 10, v = night ? c.p.night : c.p.day;
-    var t = scanTime(new Date(), 10, 20), half = ZOOMS[detailZoom];
+    var t = scanTime(new Date(), 10, 20), half = ZOOMS[maskZoom];
     c.tag.textContent = v[0]; c.lg.innerHTML = v[2];
     c.full.href = getMap(v[1] + "," + LABELS, half, 1600, "image/png", t);
     if (!c.visible) return;
@@ -421,7 +421,7 @@ footer a { color: var(--fg); }
     Object.values(cards).forEach(renderDetail);
   }
   document.querySelectorAll("[data-mz]").forEach(function (b) {
-    b.addEventListener("click", function () { maskZoom = +b.dataset.mz; try { localStorage.setItem("skynow2", JSON.stringify({ mz: maskZoom })); } catch (e) {} renderMask(); });
+    b.addEventListener("click", function () { maskZoom = +b.dataset.mz; try { localStorage.setItem("skynow2", JSON.stringify({ mz: maskZoom })); } catch (e) {} renderMask(); Object.values(cards).forEach(renderDetail); });
   });
   document.getElementById("upd").addEventListener("click", function () {
     var b = this; b.disabled = true; b.textContent = "Updating…";
