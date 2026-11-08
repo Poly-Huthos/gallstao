@@ -18,7 +18,7 @@
   --display: "Chakra Petch", "Arial Narrow", sans-serif;
   --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --clear: #4fc46c; --cloud: #f4efec;
+  --clear: #4fc46c; --cloud: #f4efec; --fog: #b9b2ae;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -35,7 +35,7 @@ body {
 /* Night mode: only red on black, to keep dark-adapted eyes */
 body.night {
   --bg: #000; --panel: #0d0302; --line: #3a0d09; --fg: #ff4a38; --muted: #a8301f;
-  --red: #ff4a38; --red-dim: #4a0f0a; --clear: #ff4a38; --cloud: #7a1c12;
+  --red: #ff4a38; --red-dim: #4a0f0a; --clear: #ff4a38; --cloud: #7a1c12; --fog: #a3271a;
 }
 body.night .big.cloudy { color: #a3271a; }
 body.night .frame img, body.night #maskLegend { filter: grayscale(1) brightness(.8) contrast(1.1); }
@@ -63,6 +63,7 @@ body.night #maskLegend { mix-blend-mode: normal; }
 .big { font: 700 56px/1 var(--display); letter-spacing: .01em; color: var(--fg); }
 .big.clear { color: var(--clear); }
 .big.cloudy { color: var(--cloud); }
+.big.fog { color: var(--fog); }
 .sub { font: 14px var(--mono); color: var(--fg); font-variant-numeric: tabular-nums; }
 .sub.muted { color: var(--muted); }
 .dots { display: grid; grid-template-columns: repeat(3, 18px); gap: 4px; margin-top: 4px; }
@@ -252,8 +253,8 @@ footer a { color: var(--fg); }
     Promise.all([sample(t), sample(tPrev)]).then(function (both) {
       var res = both[0], prev = both[1];
       if (count(res, "x") === res.length) {
-        word.textContent = "See map"; word.className = "big";
-        line.textContent = "The satellite server didn't answer the quick check. The cloud mask map below shows the same thing.";
+        SAT = { w: "See map", line: "The satellite server didn't answer the quick check. The cloud mask map below shows the same thing." };
+        decide();
         dots.innerHTML = ""; trend.textContent = ""; return;
       }
       var known = res.filter(function (x) { return x === "c" || x === "k"; }).length, clear = count(res, "c");
@@ -270,9 +271,9 @@ footer a { color: var(--fg); }
         document.getElementById("nCloudSub").textContent = "within 15 km";
         document.getElementById("srcSat").textContent = "Cloud: Meteosat scan " + hm(t) + " (every 15 min)";
       }
-      word.textContent = w; word.className = "big" + (w === "Clear" || w === "Mostly clear" ? " clear" : (w === "Cloudy" || w === "Patchy") ? " cloudy" : "");
-      line.textContent = (centre === "c" ? "Clear overhead" : centre === "k" ? "Cloud overhead" : "Overhead unknown") +
-        " · " + ringClear + " of 8 nearby points clear · scan " + hm(t) + " (MSG #" + (Math.floor((t.getUTCHours() * 60 + t.getUTCMinutes()) / 15) + 1) + ")";
+      SAT = { w: w, line: (centre === "c" ? "Clear overhead" : centre === "k" ? "Cloud overhead" : "Overhead unknown") +
+        " · " + ringClear + " of 8 nearby points clear · scan " + hm(t) + " (MSG #" + (Math.floor((t.getUTCHours() * 60 + t.getUTCMinutes()) / 15) + 1) + ")" };
+      decide();
       // dots: 3x3 compass layout (NW N NE / W me E / SW S SE)
       var order = [3, 2, 1, 4, 0, 8, 5, 6, 7], html = "";
       order.forEach(function (i) { html += '<div class="dot ' + res[i] + '"></div>'; });
@@ -324,6 +325,28 @@ footer a { color: var(--fg); }
     if (visKm < 30 || (rh != null && rh >= 85)) return "some haze";
     return "clear air";
   }
+  // ---------- Verdict = satellite + ground. The cloud mask can miss fog and low stratus, so poor visibility at Bromma overrides "Clear" ----------
+  var SAT = null, GROUND = null;
+  function decide() {
+    var word = document.getElementById("vWord"), line = document.getElementById("vLine");
+    if (!SAT) return;
+    var w = SAT.w, txt = SAT.line, cls = (w === "Clear" || w === "Mostly clear") ? "clear" : (w === "Cloudy" || w === "Patchy") ? "cloudy" : "";
+    var v = GROUND && GROUND.vis, rh = GROUND && GROUND.rh, fogWord = null;
+    if (v != null) {
+      if (v < 1) fogWord = "Fog";
+      else if (v < 5) fogWord = "Mist";
+      else if (v < 10 && rh != null && rh >= 93) fogWord = "Hazy";
+    }
+    if (fogWord && w !== "Cloudy") {
+      var vTxt = (v >= 10 ? Math.round(v) : v.toFixed(1)) + " km";
+      txt = (w === "See map" ? "No satellite check" : "Satellite sees " + (w === "Clear" || w === "Mostly clear" ? "no cloud" : "patchy cloud")) +
+        ", but Bromma reports only " + vTxt + " visibility" + (rh != null ? " at " + Math.round(rh) + "% humidity" : "") +
+        ". Fog or low cloud near the ground, which the satellite often misses.";
+      w = fogWord; cls = "fog";
+    }
+    word.textContent = w; word.className = "big" + (cls ? " " + cls : ""); line.textContent = txt;
+  }
+
   function renderGround() {
     Promise.all([smhi(1), smhi(6), smhi(12)]).then(function (r) {
       var temp = r[0] ? r[0].v : null, rh = r[1] ? r[1].v : null, vis = r[2] && !isNaN(r[2].v) ? r[2].v / 1000 : null;
@@ -344,6 +367,7 @@ footer a { color: var(--fg); }
         document.getElementById("nHumSub").textContent = rh == null ? "humidity" : rh >= 90 ? "dew risk" : rh >= 80 ? "damp" : "dry";
         document.getElementById("nVis").textContent = vis != null ? (vis >= 10 ? Math.round(vis) : vis.toFixed(1)) + " km" : "--";
         document.getElementById("nVisSub").textContent = air(vis, rh) || "visibility";
+        GROUND = { vis: vis, rh: rh, when: when }; decide();
       });
     });
   }
