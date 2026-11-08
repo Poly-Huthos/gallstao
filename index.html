@@ -22,6 +22,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; background: var(--bg); color: var(--fg); }
 body {
   font: 15px/1.5 var(--body);
@@ -295,8 +296,8 @@ footer a { color: var(--fg); }
     img.dataset.src = src;
     var msg = frame.querySelector(".msg"); if (img.hidden) { msg.hidden = false; msg.textContent = "Loading…"; } else { st.textContent = "updating…"; }
     var pre = new Image();
-    pre.onload = function () { img.src = src; img.hidden = false; msg.hidden = true; st.innerHTML = scanLabel("Meteosat MSG", "SEVIRI", "Cloud mask", t, 15); st.hidden = false; };
-    pre.onerror = function () { msg.textContent = "Couldn't load the cloud mask. Try again in a minute."; };
+    pre.onload = function () { if (img.dataset.src !== src) return; img.src = src; img.hidden = false; msg.hidden = true; st.innerHTML = scanLabel("Meteosat MSG", "SEVIRI", "Cloud mask", t, 15); st.hidden = false; };
+    pre.onerror = function () { if (img.dataset.src !== src) return; img.dataset.src = ""; if (img.hidden) { msg.hidden = false; msg.textContent = "Couldn't load the cloud mask. Tap Update in a minute."; } else { st.innerHTML += "\n(newest scan not ready, showing previous)"; } };
     pre.src = src;
     document.querySelectorAll("[data-mz]").forEach(function (b) { b.setAttribute("aria-pressed", +b.dataset.mz === maskZoom ? "true" : "false"); });
   }
@@ -360,9 +361,9 @@ footer a { color: var(--fg); }
 
   // ---------- Detail images (small and fast; full size on tap) ----------
   var DETAIL = [
-    { key: "fog", title: "Fog & mist", night: ["Night microphysics", "mtg_fd:rgb_fog", "<span>Pale aqua to grey-green</span> fog or low cloud · <span>red-brown, black</span> high cloud · <span>pink-purple, grey</span> clear"],
+    { key: "fog", title: "Fog & mist", nightBelow: 0, night: ["Night microphysics", "mtg_fd:rgb_fog", "<span>Pale aqua to grey-green</span> fog or low cloud · <span>red-brown, black</span> high cloud · <span>pink-purple, grey</span> clear"],
       day: ["Day snow-fog", "mtg_fd:rgb_snow", "<span>White to pale yellow</span> fog or low cloud · <span>red</span> snow · <span>orange</span> ice cloud"] },
-    { key: "clouds", title: "Clouds", night: ["Infrared", "mtg_fd:ir105_hrfi", "<span>White</span> high cold cloud · <span>grey</span> low or thin cloud · <span>dark</span> clear"],
+    { key: "clouds", title: "Clouds", nightBelow: 12, night: ["Infrared", "mtg_fd:ir105_hrfi", "<span>White</span> high cold cloud · <span>grey</span> low or thin cloud · <span>dark</span> clear"],
       day: ["GeoColour", "mtg_fd:rgb_geocolour", "<span>White</span> cloud · <span>green, brown</span> clear land · <span>dark blue</span> clear water"] }
   ];
   var cardsEl = document.getElementById("cards"), cards = {};
@@ -376,17 +377,17 @@ footer a { color: var(--fg); }
       st: sec.querySelector(".stamp"), lg: sec.querySelector(".legend"), full: sec.querySelector(".full"), visible: false };
   });
   function renderDetail(c) {
-    var night = skyFacts(new Date(Date.now() - 20 * 60000)).sun < 10, v = night ? c.p.night : c.p.day;
     var t = scanTime(new Date(), 10, 20), half = ZOOMS[maskZoom];
-    c.tag.textContent = v[0]; c.lg.innerHTML = v[2];
+    var sunAtScan = skyFacts(t).sun, night = sunAtScan < c.p.nightBelow, v = night ? c.p.night : c.p.day;
+    c.tag.textContent = v[0]; c.lg.innerHTML = v[2] + (c.p.key === "fog" && sunAtScan > -6 && sunAtScan < 8 ? "<br><span>Low sun:</span> fog colours are unreliable around sunrise and sunset; trust the cloud mask and Sight instead." : "");
     c.full.href = getMap(v[1] + "," + LABELS, half, 1600, "image/png", t);
     if (!c.visible) return;
     var src = getMap(v[1] + "," + LABELS, half, 700, "image/jpeg", t);
     if (c.img.dataset.src === src) return;
     c.img.dataset.src = src; if (c.img.hidden) { c.msg.hidden = false; c.msg.textContent = "Loading…"; } else { c.st.textContent = "updating…"; }
     var pre = new Image();
-    pre.onload = function () { c.img.src = src; c.img.hidden = false; c.msg.hidden = true; c.st.innerHTML = scanLabel("Meteosat-12", "FCI", v[0], t, 10); c.st.hidden = false; };
-    pre.onerror = function () { c.msg.textContent = "Couldn't load. Try again in a minute."; };
+    pre.onload = function () { if (c.img.dataset.src !== src) return; c.img.src = src; c.img.hidden = false; c.msg.hidden = true; c.st.innerHTML = scanLabel("Meteosat-12", "FCI", v[0], t, 10); c.st.hidden = false; };
+    pre.onerror = function () { if (c.img.dataset.src !== src) return; c.img.dataset.src = ""; if (c.img.hidden) { c.msg.hidden = false; c.msg.textContent = "Couldn't load. Tap Update in a minute."; } else { c.st.innerHTML += "\n(newest scan not ready, showing previous)"; } };
     pre.src = src;
   }
   if ("IntersectionObserver" in window) {
